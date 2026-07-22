@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.8.18",
+  "target": "windows-x86_64-cuda",
+  "asset": "libcrispasr-windows-x86_64-cuda.tar.gz",
+  "sha256": "replace-with-release-asset-sha256",
+  "compatibilityRevision": "replace-with-crispasr-compat-revision",
+  "library": "lib/crispasr.dll"
+}

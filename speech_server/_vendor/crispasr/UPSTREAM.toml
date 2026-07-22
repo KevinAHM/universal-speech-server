@@ -1,0 +1,6 @@
+repository = "https://github.com/CrispStrobe/CrispASR"
+commit = "1be20080423620ab283af64bae96a3b575c36753"
+source_path = "python/crispasr"
+binding_version = "0.4.9"
+license = "MIT"
+vendored_on = "2026-07-20"

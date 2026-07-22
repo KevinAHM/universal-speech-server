@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "platform": "windows-x86_64",
+  "version": "3.13.14",
+  "archive": "python-3.13.14-embed-amd64.zip",
+  "sha256": "90b4e5b9898b72d744650524bff92377c367f44bd5fbd09e3148656c080ad907",
+  "upstreamUrl": "https://www.python.org/ftp/python/3.13.14/python-3.13.14-embed-amd64.zip",
+  "license": "PSF-2.0",
+  "getPip": {
+    "archive": "get-pip.py",
+    "upstreamUrl": "https://bootstrap.pypa.io/get-pip.py",
+    "sha256": "a341e1a43e38001c551a1508a73ff23636a11970b61d901d9a1cad2a18f57055"
+  }
+}

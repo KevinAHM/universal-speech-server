@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            platform: windows-x86_64
+          - os: ubuntu-24.04
+            platform: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Build platform tree
+        shell: pwsh
+        run: >-
+          python -c "from pathlib import Path; from scripts.build_release import build_platform_tree; build_platform_tree('${{ matrix.platform }}', Path('dist/smoke'))"
+      - name: Bootstrap Windows CPU runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File dist/smoke/scripts/bootstrap_windows.ps1 -Target cpu
+      - name: Bootstrap Linux CPU runtime
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cd dist/smoke
+          sh scripts/install_sfw.sh
+          sh scripts/bootstrap_posix.sh setup cpu
+
+  publish:
+    needs: smoke
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Build verified release archives
+        run: python scripts/build_release.py archives --version "${GITHUB_REF_NAME}" --output dist/release
+      - name: Verify archive checksums
+        working-directory: dist/release
+        run: sha256sum --check SHA256SUMS
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/release/* \
+            --verify-tag \
+            --generate-notes \
+            --title "Universal Speech Server $GITHUB_REF_NAME"

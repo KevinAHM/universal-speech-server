@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "installations": {
+    "model:parakeet-tdt-0.6b-v3": {
+      "catalogId": "parakeet-tdt-0.6b-v3",
+      "registryBundle": "parakeet",
+      "canonicalBackend": "parakeet",
+      "license": "",
+      "installedAt": "2026-07-20T00:00:00Z",
+      "artifacts": [
+        {
+          "kind": "primary",
+          "filename": "parakeet-tdt-0.6b-v3-q4_k.gguf",
+          "path": "artifacts/model-parakeet-example/parakeet-tdt-0.6b-v3-q4_k.gguf",
+          "sourceUrl": "https://huggingface.co/cstr/parakeet-tdt-0.6b-v3-GGUF/resolve/main/parakeet-tdt-0.6b-v3-q4_k.gguf",
+          "url": "https://huggingface.co/cstr/parakeet-tdt-0.6b-v3-GGUF/resolve/0000000000000000000000000000000000000000/parakeet-tdt-0.6b-v3-q4_k.gguf",
+          "repository": "cstr/parakeet-tdt-0.6b-v3-GGUF",
+          "revision": "0000000000000000000000000000000000000000",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 417894912
+        }
+      ]
+    }
+  }
+}

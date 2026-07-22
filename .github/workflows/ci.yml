@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned SFW and uv
+        run: sh scripts/install_sfw.sh
+      - name: Create protected test environment
+        run: bin/sfw bin/uv venv --seed --python 3.13 .venv-torch
+      - name: Install test dependencies through SFW
+        run: >-
+          bin/sfw bin/uv pip install
+          --python .venv-torch/bin/python
+          --requirements requirements-runtime.txt
+          pytest
+      - name: Verify scripts and Python
+        run: |
+          sh -n start_server.sh scripts/bootstrap_posix.sh scripts/install_sfw.sh
+          .venv-torch/bin/python -m py_compile speech_server/crisp.py speech_server/_vendor/crispasr/_binding.py
+      - name: Run server tests
+        run: .venv-torch/bin/python -m pytest tests -q
+      - name: Build and audit public tree
+        run: .venv-torch/bin/python scripts/build_release.py public-tree --output dist/public-repo
+
+  test-windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Materialize pinned Windows security tooling
+        shell: pwsh
+        run: python scripts/build_windows_runtime.py --output dist/ci-tools
+      - name: Create test environment
+        shell: pwsh
+        run: python -m venv .venv-torch
+      - name: Install test dependencies through SFW
+        shell: pwsh
+        run: >-
+          & dist/ci-tools/bin/sfw.exe
+          .venv-torch/Scripts/python.exe
+          -m pip install
+          --requirement requirements-runtime.txt
+          pytest
+      - name: Verify Python
+        shell: pwsh
+        run: >-
+          & .venv-torch/Scripts/python.exe -m py_compile
+          speech_server/crisp.py
+          speech_server/_vendor/crispasr/_binding.py
+      - name: Run server tests
+        shell: pwsh
+        run: .venv-torch/Scripts/python.exe -m pytest tests -q
+      - name: Build and audit public tree
+        shell: pwsh
+        run: .venv-torch/Scripts/python.exe scripts/build_release.py public-tree --output dist/public-repo

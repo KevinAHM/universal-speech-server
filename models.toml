@@ -1,0 +1,141 @@
+resident_limit = 2
+
+[upscaler]
+id = "voxcpm2-vae"
+backend = "voxcpm2-vae"
+model = "models/voxcpm2-vae-f32.gguf"
+sample_rate = 48000
+estimated_vram_mb = 500
+
+[aligner]
+id = "canary-ctc-aligner-q4_k"
+backend = "canary-ctc"
+registry_bundle = "canary-ctc-aligner"
+model = "~/.cache/crispasr/canary-ctc-aligner-q4_k.gguf"
+languages = ["en"]
+n_threads = 4
+estimated_vram_mb = 500
+
+[models.omnivoice]
+backend = "omnivoice"
+registry_bundle = "omnivoice"
+model = "models/omnivoice-q8_0.gguf"
+codec = "models/omnivoice-tokenizer-f16.gguf"
+sample_rate = 24000
+languages = ["en", "de", "fr", "es", "it", "pt"]
+text_profile = "omnivoice"
+# Canonical default bundle: omnivoice-f16.gguf + tokenizer, 1,633,808,896
+# bytes. Estimates are 2x bundle bytes rounded up to 256 MiB.
+estimated_ram_mb = 3328
+estimated_vram_mb = 3328
+
+# OmniVoice documents additional non-verbal tags, but only laughter is reliable
+# enough for Sonorus to advertise to dialogue models.
+[[models.omnivoice.paralinguistic_tags]]
+token = "[laughter]"
+aliases = ["[laugh]", "[laughs]", "[laughing]"]
+description = "Inserts natural laughter."
+
+[models.omnivoice.voice_reference]
+transcript = "required"
+preparation = "persistent"
+preparation_inputs = ["audio", "transcript"]
+
+[models.omnivoice.segmentation]
+estimator = "reference-rate"
+min_seconds = 8
+target_seconds = 20
+max_seconds = 28
+fallback_characters_per_second = 14
+fallback_words_per_second = 2.7
+safety_factor = 1.15
+
+[[models.omnivoice.controls]]
+id = "numSteps"
+type = "integer"
+minimum = 8
+maximum = 64
+step = 4
+default = 32
+
+[[models.omnivoice.controls]]
+id = "firstSegmentSteps"
+type = "integer"
+minimum = 8
+maximum = 64
+step = 4
+default = 32
+
+[[models.omnivoice.controls]]
+id = "guidanceScale"
+type = "number"
+minimum = 0.0
+maximum = 10.0
+step = 0.1
+default = 2.0
+
+[models.chatterbox]
+backend = "chatterbox"
+registry_bundle = "chatterbox"
+model = "models/chatterbox-t3-q8_0.gguf"
+codec = "models/chatterbox-s3gen-q8_0.gguf"
+sample_rate = 24000
+languages = ["en", "ar", "da", "de", "el", "es", "fi", "fr", "he", "hi", "it", "ja", "ko", "ms", "nl", "no", "pl", "pt", "ru", "sv", "sw", "tr", "zh"]
+# Canonical default Q8_0 pair: 1,003,824,896 bytes. Estimates are 2x
+# bundle bytes rounded up to 256 MiB.
+estimated_ram_mb = 2048
+estimated_vram_mb = 2048
+
+[models.chatterbox.voice_reference]
+transcript = "unused"
+preparation = "lazy"
+preparation_inputs = ["audio"]
+
+[[models.chatterbox.controls]]
+id = "numSteps"
+type = "integer"
+minimum = 1
+maximum = 30
+step = 1
+default = 6
+
+[[models.chatterbox.controls]]
+id = "guidanceScale"
+type = "number"
+minimum = 0.0
+maximum = 2.0
+step = 0.05
+default = 0.5
+
+[[models.chatterbox.controls]]
+id = "exaggeration"
+type = "number"
+minimum = 0.0
+maximum = 2.0
+step = 0.05
+default = 0.5
+
+[models."parakeet-tdt-0.6b-v3"]
+task = "asr"
+backend = "parakeet"
+registry_bundle = "parakeet"
+model = "~/.cache/crispasr/parakeet-tdt-0.6b-v3-q4_k.gguf"
+sample_rate = 16000
+cloning = false
+languages = ["bg", "hr", "cs", "da", "nl", "en", "et", "fi", "fr", "de", "el", "hu", "it", "lv", "lt", "mt", "pl", "pt", "ro", "ru", "sk", "sl", "es", "sv", "uk"]
+# Canonical default Q4_K GGUF: 417,894,912 bytes. Estimates are 2x bundle
+# bytes rounded up to 256 MiB.
+estimated_ram_mb = 1024
+estimated_vram_mb = 1024
+
+[models."parakeet-tdt-0.6b-v3".transcription]
+encoding = "pcm_s16le"
+sample_rates = [16000]
+channels = 1
+max_seconds = 60
+automatic_language_detection = true
+timestamps = ["none", "segment", "word"]
+bias_terms = true
+max_bias_terms = 256
+max_bias_term_length = 128
+hotword_boost = 2.0

@@ -1,0 +1,93 @@
+schema_version = 1
+repository = "CrispStrobe/CrispASR"
+minimum_release = "v0.8.18"
+binding_commit = "1be20080423620ab283af64bae96a3b575c36753"
+binding_version = "0.4.9"
+
+# A release is eligible only when its tag contains every required commit.
+# PR #285 adds the session codec setter, the second commit supplies runtime
+# seed control, the third exposes the canonical default-bundle ABI used by the
+# model installer, and PR #289 supplies the VoxCPM2 AudioVAE S2S backend.
+required_ancestor_commits = [
+  "a492d3f72a8210502a35b54fd22cfe6ed1e42879",
+  "e907acbcfaece247c52cfd69689a95185f3efe8a",
+  "104d85be1d78cdf9559b16ee93ab5aa93d35b480",
+  "de3409c67abf2c6cd620f0c2a291f472bc232622",
+]
+
+[[targets]]
+id = "windows-x86_64-cuda"
+os = "windows"
+arch = "x86_64"
+accelerator = "nvidia"
+asset = "libcrispasr-windows-x86_64-cuda.tar.gz"
+
+[[targets]]
+id = "windows-x86_64-vulkan"
+os = "windows"
+arch = "x86_64"
+accelerator = "vulkan"
+asset = "libcrispasr-windows-x86_64-vulkan.tar.gz"
+
+[[targets]]
+id = "windows-x86_64-cpu"
+os = "windows"
+arch = "x86_64"
+accelerator = "cpu"
+asset = "libcrispasr-windows-x86_64.tar.gz"
+
+[[targets]]
+id = "windows-x86_64-cpu-legacy"
+os = "windows"
+arch = "x86_64"
+accelerator = "cpu-legacy"
+asset = "libcrispasr-windows-x86_64-cpu-legacy.tar.gz"
+
+[[targets]]
+id = "linux-x86_64-cuda"
+os = "linux"
+arch = "x86_64"
+accelerator = "nvidia"
+asset = "libcrispasr-linux-x86_64-cuda.tar.gz"
+
+[[targets]]
+id = "linux-x86_64-hip"
+os = "linux"
+arch = "x86_64"
+accelerator = "amd"
+asset = "libcrispasr-linux-x86_64-hip.tar.gz"
+
+[[targets]]
+id = "linux-x86_64-vulkan"
+os = "linux"
+arch = "x86_64"
+accelerator = "vulkan"
+asset = "libcrispasr-linux-x86_64-vulkan.tar.gz"
+
+[[targets]]
+id = "linux-x86_64-cpu"
+os = "linux"
+arch = "x86_64"
+accelerator = "cpu"
+asset = "libcrispasr-linux-x86_64.tar.gz"
+
+[[targets]]
+id = "linux-x86_64-avx512"
+os = "linux"
+arch = "x86_64"
+accelerator = "cpu-avx512"
+asset = "libcrispasr-linux-x86_64-avx512.tar.gz"
+
+[[targets]]
+id = "linux-arm64-cpu"
+os = "linux"
+arch = "arm64"
+accelerator = "cpu"
+asset = "libcrispasr-linux-arm64.tar.gz"
+
+[[targets]]
+id = "macos-arm64-metal"
+os = "macos"
+arch = "arm64"
+accelerator = "metal"
+asset = "libcrispasr-macos-arm64.tar.gz"
