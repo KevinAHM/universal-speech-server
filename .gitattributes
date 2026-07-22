@@ -6,6 +6,6 @@
 *.toml text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+vendor/python/get-pip.py -text
 *.zip binary
 *.exe binary
-

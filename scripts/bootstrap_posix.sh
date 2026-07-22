@@ -3,6 +3,14 @@ set -eu
 
 mode=${1:-run}
 target=${2:-auto}
+gpu_device=${3:-}
+case "$gpu_device" in
+    "") ;;
+    *[!0-9]*)
+        echo "GPU device index must be a non-negative integer: $gpu_device" >&2
+        exit 2
+        ;;
+esac
 case "$mode" in
     run|setup) ;;
     *)
@@ -99,6 +107,10 @@ else
     PYTHONUTF8=1 "$runtime_python" -m speech_server.bootstrap setup-native --target "$target"
 fi
 if [ "$mode" = run ]; then
+    if [ -n "$gpu_device" ]; then
+        SPEECH_SERVER_GPU_DEVICE=$gpu_device
+        export SPEECH_SERVER_GPU_DEVICE
+    fi
     gpu_assignment=$(PYTHONUTF8=1 "$runtime_python" -m speech_server.gpu_select --target "$target")
     case "$gpu_assignment" in
         CUDA_VISIBLE_DEVICES=*)

@@ -103,6 +103,28 @@ def test_startup_uses_installed_runtime_and_preserves_explicit_visibility(
     assert assignment == "CUDA_VISIBLE_DEVICES=2"
 
 
+def test_requested_device_overrides_inherited_visibility(tmp_path, monkeypatch):
+    manifest = tmp_path / "installed.json"
+    manifest.write_text(
+        json.dumps({"target": "windows-x86_64-cuda"}), encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        gpu_select,
+        "enumerate_nvidia_devices",
+        lambda: [GPUDevice("0", "First"), GPUDevice("1", "Second")],
+    )
+    assignment = gpu_select.startup_assignment(
+        target="auto",
+        manifest=manifest,
+        environ={
+            "CUDA_VISIBLE_DEVICES": "1",
+            "SPEECH_SERVER_GPU_DEVICE": "0",
+        },
+        output=io.StringIO(),
+    )
+    assert assignment == "CUDA_VISIBLE_DEVICES=0"
+
+
 def test_startup_selects_from_the_actual_vulkan_device_list(tmp_path, monkeypatch):
     manifest = tmp_path / "installed.json"
     manifest.write_text(

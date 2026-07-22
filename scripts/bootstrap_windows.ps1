@@ -1,5 +1,6 @@
 param(
     [string]$Target = "auto",
+    [ValidatePattern('^[0-9]+$')][string]$GpuDevice = "",
     [switch]$Update,
     [switch]$RunServer
 )
@@ -348,6 +349,9 @@ if ($exitCode -ne 0) {
     exit $exitCode
 }
 if ($RunServer) {
+    if ($GpuDevice) {
+        $env:SPEECH_SERVER_GPU_DEVICE = $GpuDevice
+    }
     Set-SelectedGpuEnvironment $Target $pythonExe
     Write-Host "Starting Universal Speech Server..."
     Invoke-NativeCommand -FilePath $pythonExe -Arguments @(

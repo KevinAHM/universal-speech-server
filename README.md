@@ -65,9 +65,21 @@ sfw python -m pip install -r requirements-runtime.txt
 After selecting the native runtime, the start scripts enumerate GPUs for that
 runtime. A sole CUDA or Vulkan GPU is selected automatically; when several are
 available, an interactive terminal asks which device to use. Non-interactive
-launches select the first enumerated device. Set `SPEECH_SERVER_GPU_DEVICE` to
-an enumerated index to preselect it, or set `CUDA_VISIBLE_DEVICES` /
-`GGML_VK_VISIBLE_DEVICES` directly; existing visibility settings always win.
+launches select the first enumerated device. Pass `--gpu INDEX` to skip the
+prompt and select a device explicitly:
+
+```powershell
+.\start_server.bat --gpu 0
+```
+
+```sh
+./start_server.sh --gpu 0
+```
+
+The flag takes precedence over inherited visibility settings. For service
+configuration, `SPEECH_SERVER_GPU_DEVICE` provides the same override. Without
+either override, existing `CUDA_VISIBLE_DEVICES` or `GGML_VK_VISIBLE_DEVICES`
+settings remain authoritative.
 
 The default URL is `http://127.0.0.1:8100`. Configure authentication with
 `SPEECH_SERVER_TOKEN`, or override the host, port, model registry, voice store,

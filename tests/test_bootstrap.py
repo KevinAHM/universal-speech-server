@@ -162,6 +162,8 @@ def test_python_and_socket_payloads_are_pinned():
     assert '"$uv_command" venv --seed' in posix_bootstrap
     assert '"$uv_command" pip install --python "$runtime_python" pip' in posix_bootstrap
     assert "speech_server.gpu_select" in posix_bootstrap
+    posix_launcher = (root / "start_server.sh").read_text(encoding="utf-8")
+    assert "--gpu" in posix_launcher
     windows_bootstrap = (root / "scripts/bootstrap_windows.ps1").read_text(
         encoding="utf-8"
     )
@@ -170,6 +172,8 @@ def test_python_and_socket_payloads_are_pinned():
     assert '"-m", "pip", "install"' in windows_bootstrap
     assert '$ErrorActionPreference = "Continue"' in windows_bootstrap
     assert "speech_server.gpu_select" in windows_bootstrap
+    windows_launcher = (root / "start_server.bat").read_text(encoding="utf-8")
+    assert "--gpu" in windows_launcher
     assert "$exitCode = Invoke-NativeCommand" not in windows_bootstrap
     assert "Piping here" in windows_bootstrap
     native_bootstrap = (root / "speech_server/bootstrap.py").read_text(

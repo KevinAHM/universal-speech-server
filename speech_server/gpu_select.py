@@ -277,8 +277,9 @@ def startup_assignment(
     variable = (
         "CUDA_VISIBLE_DEVICES" if backend == "cuda" else "GGML_VK_VISIBLE_DEVICES"
     )
+    requested = environ.get("SPEECH_SERVER_GPU_DEVICE", "").strip()
     existing = environ.get(variable, "").strip()
-    if existing:
+    if existing and not requested:
         print(f"Using existing {variable}={existing}.", file=output)
         return f"{variable}={existing}"
     devices = (
@@ -287,7 +288,7 @@ def startup_assignment(
     selected = choose_device(
         devices,
         backend=backend,
-        requested=environ.get("SPEECH_SERVER_GPU_DEVICE", "").strip(),
+        requested=requested,
         interactive=interactive,
         input_fn=input_fn,
         output=output,

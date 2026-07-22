@@ -581,4 +581,3 @@ def test_manager_reports_a_runtime_without_the_bundle_api(tmp_path: Path):
     with pytest.raises(ModelInstallError) as exc:
         manager.plan("model:m")
     assert exc.value.code == "registry_unavailable"
-
