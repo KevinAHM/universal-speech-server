@@ -556,6 +556,58 @@ def test_manager_requires_explicit_license_acceptance(tmp_path: Path):
     assert failed["requiresLicenseAcceptance"] is True
 
 
+def test_upscaler_installs_from_the_canonical_voxcpm2_tts_bundle(tmp_path: Path):
+    runtime = tmp_path / "crispasr.dll"
+    runtime.write_bytes(b"runtime")
+    body = b"full-voxcpm2-bundle-with-vae-tensors"
+    locked = _locked("voxcpm2-q4_k.gguf", body)
+    bundle = RegistryBundle(
+        backend="voxcpm2-tts",
+        license="",
+        requires_acceptance=False,
+        artifacts=(
+            RegistryArtifact(
+                "primary",
+                locked.filename,
+                locked.source_url,
+                "~1.6 GB",
+            ),
+        ),
+    )
+    upscaler = ModelSpec(
+        id="voxcpm2-vae",
+        backend="voxcpm2-vae",
+        model_path=tmp_path / "missing-vae.gguf",
+        sample_rate=48000,
+        registry_bundle="voxcpm2-tts",
+    )
+
+    def downloader(artifact, destination, progress, cancel):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(body)
+        progress(len(body), len(body))
+
+    manager = ModelInstallationManager(
+        ServerConfig(
+            models={},
+            upscaler=upscaler,
+            lib_path=runtime,
+            model_manifest_path=tmp_path / "runtime" / "models" / "installed.json",
+        ),
+        bundle_resolver=lambda backend, lib: bundle,
+        artifact_locker=lambda artifact: locked,
+        downloader=downloader,
+    )
+    plan = manager.plan("upscaler")
+    assert plan["registryBundle"] == "voxcpm2-tts"
+    assert plan["canonicalBackend"] == "voxcpm2-tts"
+    completed = _wait(manager, manager.start("upscaler")["id"])
+    assert completed["state"] == "completed"
+    assert upscaler.installed is True
+    assert upscaler.backend == "voxcpm2-vae"
+    assert upscaler.model_path.name == "voxcpm2-q4_k.gguf"
+
+
 def test_manager_reports_a_runtime_without_the_bundle_api(tmp_path: Path):
     runtime = tmp_path / "crispasr.dll"
     runtime.write_bytes(b"old-runtime")

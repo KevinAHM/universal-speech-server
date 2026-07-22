@@ -42,7 +42,20 @@ jobs:
         run: |
           cd dist/smoke
           sh scripts/install_sfw.sh
+          set +e
+          missing_output=$(sh scripts/bootstrap_posix.sh setup cpu 2>&1)
+          missing_status=$?
+          set -e
+          printf '%s\n' "$missing_output"
+          if [ "$missing_status" -eq 0 ]; then
+            echo "Expected the clean Ubuntu runner to report missing OpenBLAS." >&2
+            exit 1
+          fi
+          printf '%s\n' "$missing_output" | grep -F "sudo apt install libopenblas0"
+          sudo apt-get update
+          sudo apt-get install -y libopenblas0
           sh scripts/bootstrap_posix.sh setup cpu
+          runtime/python/bin/python -c 'import sys; assert sys.version_info[:3] == (3, 13, 14)'
 
   publish:
     needs: smoke

@@ -30,10 +30,22 @@ sh ./scripts/install_sfw.sh
 ```
 
 The first command installs pinned, hash-verified copies of Socket Firewall Free
-and `uv` under `bin/`. The launcher then creates an isolated Python environment
-and starts the server.
+and `uv` under `bin/`. The launcher uses `uv` to download and manage the pinned
+Python 3.13.14 runtime, creates an isolated environment, and starts the server.
+Socket Firewall protects Python package installation; the Python runtime itself
+is a binary distribution downloaded directly by `uv`.
 
-The default address is `http://127.0.0.1:8100`.
+Some CrispASR Linux assets require `libopenblas.so.0`. Setup checks the selected
+native library and, when it is missing, prints the appropriate OpenBLAS package
+command for Ubuntu/Debian, Fedora/RHEL, or Arch Linux.
+The Linux CUDA asset also requires the host CUDA 12.8 runtime libraries; setup
+recognizes missing `cudart`, cuBLAS, and NVRTC libraries and links to NVIDIA's
+version-specific CUDA 12.8 installer selector.
+
+The server binds to all network interfaces on port `8100` by default. On the
+same machine, connect to `http://127.0.0.1:8100`; from another device on your
+LAN, connect to `http://<server-lan-ip>:8100`. Set `SPEECH_SERVER_HOST` to
+`127.0.0.1` if you want a local-only server.
 
 ## Runtime selection
 
@@ -75,7 +87,7 @@ reported as unavailable.
 Common environment variables:
 
 - `SPEECH_SERVER_TOKEN` - authentication token.
-- `SPEECH_SERVER_HOST` - bind address; defaults to `127.0.0.1`.
+- `SPEECH_SERVER_HOST` - bind address; defaults to `0.0.0.0` for LAN access.
 - `SPEECH_SERVER_PORT` - port; defaults to `8100`.
 - `SPEECH_SERVER_GPU_DEVICE` - GPU index selected at startup.
 - `SPEECH_SERVER_UPDATE=1` - re-resolve the native runtime.
@@ -89,6 +101,9 @@ variables defined in `speech_server/config.py`.
 Python package operations are routed through Socket Firewall. Bundled and
 downloaded runtime tools are pinned and hash-verified. Model files are fetched
 directly only after their immutable metadata has been resolved and verified.
+The default bind exposes the API to reachable network devices. Set
+`SPEECH_SERVER_TOKEN` when the network is not fully trusted, or bind to
+`127.0.0.1` for local-only access.
 
 The project is licensed under Apache-2.0. Vendored and distributed components
 are documented in `THIRD_PARTY_NOTICES.md`.

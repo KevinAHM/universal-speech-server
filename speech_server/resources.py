@@ -7,7 +7,7 @@ import math
 import os
 import subprocess
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Mapping
 
 from .config import ServerConfig
 
@@ -104,12 +104,26 @@ def _posix_memory() -> tuple[dict[str, int] | None, int | None]:
     return ram, process_bytes
 
 
-def _nvidia_gpus() -> tuple[list[dict[str, Any]], str | None]:
+def _selected_nvidia_identity(environ: Mapping[str, str]) -> str | None:
+    """Return the first physical CUDA device explicitly exposed to the server."""
+    visible = environ.get("CUDA_VISIBLE_DEVICES", "").strip()
+    if visible:
+        return visible.split(",", 1)[0].strip()
+    requested = environ.get("SPEECH_SERVER_GPU_DEVICE", "").strip()
+    return requested.split(",", 1)[0].strip() if requested else None
+
+
+def _nvidia_gpus(
+    environ: Mapping[str, str] = os.environ,
+) -> tuple[list[dict[str, Any]], str | None]:
+    selected_identity = _selected_nvidia_identity(environ)
     command = [
         "nvidia-smi",
-        "--query-gpu=index,name,memory.total,memory.used,memory.free",
+        "--query-gpu=index,uuid,name,memory.total,memory.used,memory.free",
         "--format=csv,noheader,nounits",
     ]
+    if selected_identity is not None:
+        command.insert(1, f"--id={selected_identity}")
     try:
         result = subprocess.run(
             command,
@@ -130,18 +144,20 @@ def _nvidia_gpus() -> tuple[list[dict[str, Any]], str | None]:
 
     gpus = []
     for line in result.stdout.splitlines():
-        parts = [part.strip() for part in line.split(",", 4)]
-        if len(parts) != 5:
+        parts = [part.strip() for part in line.split(",", 5)]
+        if len(parts) != 6:
             continue
         try:
-            index, name, total, used, free = parts
+            index, uuid, name, total, used, free = parts
             gpus.append(
                 {
                     "index": int(index),
+                    "uuid": uuid,
                     "name": name,
                     "totalBytes": int(total) * MIB,
                     "usedBytes": int(used) * MIB,
                     "freeBytes": int(free) * MIB,
+                    "selected": selected_identity is not None,
                 }
             )
         except ValueError:
@@ -152,6 +168,7 @@ def _nvidia_gpus() -> tuple[list[dict[str, Any]], str | None]:
 def sample_resources(pool, aligner=None) -> dict[str, Any]:
     ram, process_ram = _windows_memory() if os.name == "nt" else _posix_memory()
     gpus, gpu_error = _nvidia_gpus()
+    selected_gpu = next((gpu for gpu in gpus if gpu.get("selected")), None)
     components = pool.model_residency()
     loaded_model_ids = [component["id"] for component in components]
     upscaler = pool.upscaler_residency()
@@ -175,6 +192,7 @@ def sample_resources(pool, aligner=None) -> dict[str, Any]:
         "ram": ram,
         "processRamBytes": process_ram,
         "gpus": gpus,
+        "selectedGpuIndex": selected_gpu.get("index") if selected_gpu else None,
         "gpuTelemetry": "nvidia-smi" if gpus else "unavailable",
         "gpuTelemetryError": gpu_error,
         "loadedModelIds": loaded_model_ids,
@@ -274,7 +292,9 @@ def build_stack_load_plan(
         gpu for gpu in sampled.get("gpus", [])
         if isinstance(gpu, dict) and isinstance(gpu.get("freeBytes"), (int, float))
     ]
-    gpu = max(gpus, key=lambda value: value["freeBytes"], default=None)
+    gpu = next((value for value in gpus if value.get("selected")), None)
+    if gpu is None:
+        gpu = min(gpus, key=lambda value: value.get("index", math.inf), default=None)
     available = {
         "ram": ram_free if isinstance(ram_free, (int, float)) else None,
         "vram": gpu.get("freeBytes") if gpu else None,

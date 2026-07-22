@@ -482,7 +482,7 @@ class ServerConfig:
     aligner: Optional[AlignerSpec] = None
     resident_limit: int = 1
     auth_token: str = ""
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 8100
     lib_path: Optional[Path] = None
     voice_dir: Path = REPO_ROOT / "audio_prompts"
@@ -1064,7 +1064,7 @@ def load_config(models_path: Optional[Path] = None) -> ServerConfig:
         aligner=aligner,
         resident_limit=resident_limit,
         auth_token=os.getenv("SPEECH_SERVER_TOKEN", "").strip(),
-        host=os.getenv("SPEECH_SERVER_HOST", "127.0.0.1"),
+        host=os.getenv("SPEECH_SERVER_HOST", "0.0.0.0"),
         port=int(os.getenv("SPEECH_SERVER_PORT", "8100")),
         lib_path=_default_lib_path(),
         voice_dir=Path(

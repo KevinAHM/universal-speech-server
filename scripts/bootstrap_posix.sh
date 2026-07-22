@@ -24,6 +24,7 @@ echo "Preparing Universal Speech Server..."
 
 runtime_python="$root/runtime/python/bin/python"
 managed_python=1
+managed_python_version=3.13.14
 sfw_command=
 uv_command=
 
@@ -52,15 +53,22 @@ require_protected_uv() {
     if [ -z "$uv_command" ]; then
         echo "uv is required to create or update the isolated server environment." >&2
         echo "Run: sh ./scripts/install_sfw.sh" >&2
-        echo "Or set SPEECH_SERVER_PYTHON to a prepared Python 3.11+ interpreter." >&2
+        echo "Or set SPEECH_SERVER_PYTHON to a prepared compatible interpreter." >&2
         exit 1
     fi
 }
 
 if [ "$managed_python" -eq 1 ] && [ ! -x "$runtime_python" ]; then
     require_protected_uv
+    echo "Downloading managed Python $managed_python_version directly with uv..."
+    "$uv_command" python install "$managed_python_version"
     mkdir -p "$root/runtime"
-    "$sfw_command" "$uv_command" venv --seed --python 3.13.14 "$root/runtime/python"
+    echo "Creating the protected Python environment..."
+    "$sfw_command" "$uv_command" venv --seed \
+        --python "$managed_python_version" \
+        --managed-python \
+        --no-python-downloads \
+        "$root/runtime/python"
 fi
 
 if [ ! -x "$runtime_python" ]; then
@@ -106,6 +114,7 @@ if [ "${SPEECH_SERVER_UPDATE:-0}" = 1 ]; then
 else
     PYTHONUTF8=1 "$runtime_python" -m speech_server.bootstrap setup-native --target "$target"
 fi
+PYTHONUTF8=1 "$runtime_python" -m speech_server.native_check
 if [ "$mode" = run ]; then
     if [ -n "$gpu_device" ]; then
         SPEECH_SERVER_GPU_DEVICE=$gpu_device

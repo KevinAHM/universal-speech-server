@@ -194,11 +194,24 @@ def test_shipped_model_catalog_loads():
     assert parakeet.registry_bundle == "parakeet"
     assert cfg.models["omnivoice"].audio_tags == ["[laughter]"]
     assert cfg.models["chatterbox"].audio_tags == []
+    assert cfg.upscaler is not None
+    assert cfg.upscaler.backend == "voxcpm2-vae"
+    assert cfg.upscaler.registry_bundle == "voxcpm2-tts"
+    assert cfg.upscaler.installable is True
+    assert cfg.upscaler.resource_requirements()["ram"] == {
+        "estimatedBytes": 3328 * 1024 * 1024,
+        "source": "registry",
+        "confidence": "declared",
+    }
+    assert cfg.upscaler.resource_requirements()["vram"] == (
+        cfg.upscaler.resource_requirements()["ram"]
+    )
 
 
 def test_defaults(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("SPEECH_SERVER_TOKEN", raising=False)
     monkeypatch.delenv("SPEECH_SERVER_DEBUG", raising=False)
+    monkeypatch.delenv("SPEECH_SERVER_HOST", raising=False)
     path = tmp_path / "models.toml"
     path.write_text(
         "[models.m]\nbackend='omnivoice'\nmodel='m.gguf'\nsample_rate=24000\n",
@@ -206,10 +219,23 @@ def test_defaults(tmp_path: Path, monkeypatch):
     )
     cfg = load_config(models_path=path)
     assert cfg.auth_token == ""
+    assert cfg.host == "0.0.0.0"
     assert cfg.resident_limit == 1
     assert cfg.upscaler is None
     assert cfg.models["m"].installable is False
     assert cfg.debug is False
+
+
+def test_host_environment_override_supports_local_only_binding(
+    tmp_path: Path, monkeypatch
+):
+    path = tmp_path / "models.toml"
+    path.write_text(
+        "[models.m]\nbackend='omnivoice'\nmodel='m.gguf'\nsample_rate=24000\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SPEECH_SERVER_HOST", "127.0.0.1")
+    assert load_config(path).host == "127.0.0.1"
 
 
 @pytest.mark.parametrize("value", ["1", "true", "TRUE", "yes", "on"])

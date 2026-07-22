@@ -14,14 +14,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install pinned SFW and uv
         run: sh scripts/install_sfw.sh
+      - name: Install managed Python
+        run: bin/uv python install 3.13.14
       - name: Create protected test environment
-        run: bin/sfw bin/uv venv --seed --python 3.13 .venv-torch
+        run: >-
+          bin/sfw bin/uv venv --seed
+          --python 3.13.14
+          --managed-python
+          --no-python-downloads
+          .venv-torch
       - name: Install test dependencies through SFW
         run: >-
           bin/sfw bin/uv pip install
           --python .venv-torch/bin/python
           --requirements requirements-runtime.txt
           pytest
+          httpx2
       - name: Verify scripts and Python
         run: |
           sh -n start_server.sh scripts/bootstrap_posix.sh scripts/install_sfw.sh
@@ -52,6 +60,7 @@ jobs:
           -m pip install
           --requirement requirements-runtime.txt
           pytest
+          httpx2
       - name: Verify Python
         shell: pwsh
         run: >-

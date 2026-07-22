@@ -3,9 +3,14 @@ resident_limit = 2
 [upscaler]
 id = "voxcpm2-vae"
 backend = "voxcpm2-vae"
+registry_bundle = "voxcpm2-tts"
 model = "models/voxcpm2-vae-f32.gguf"
 sample_rate = 48000
-estimated_vram_mb = 500
+# The canonical VoxCPM2 bundle is a full GGUF, but the voxcpm2-vae backend
+# loads only its AudioVAE tensors. Canonical bundle: voxcpm2-q4_k.gguf,
+# 1,689,498,432 bytes. Estimates are 2x bundle bytes rounded up to 256 MiB.
+estimated_ram_mb = 3328
+estimated_vram_mb = 3328
 
 [aligner]
 id = "canary-ctc-aligner-q4_k"

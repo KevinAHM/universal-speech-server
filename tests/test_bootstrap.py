@@ -159,8 +159,17 @@ def test_python_and_socket_payloads_are_pinned():
     posix_bootstrap = (root / "scripts/bootstrap_posix.sh").read_text(
         encoding="utf-8"
     )
-    assert '"$uv_command" venv --seed' in posix_bootstrap
+    assert 'managed_python_version=3.13.14' in posix_bootstrap
+    assert '"$uv_command" python install "$managed_python_version"' in posix_bootstrap
+    assert '"$sfw_command" "$uv_command" python install' not in posix_bootstrap
+    assert '"$sfw_command" "$uv_command" venv --seed' in posix_bootstrap
+    assert "--managed-python" in posix_bootstrap
+    assert "--no-python-downloads" in posix_bootstrap
+    assert "find_base_python" not in posix_bootstrap
+    assert 'rm -rf "$root/runtime/python"' not in posix_bootstrap
     assert '"$uv_command" pip install --python "$runtime_python" pip' in posix_bootstrap
+    assert "UV_SYSTEM_CERTS" not in posix_bootstrap
+    assert "speech_server.native_check" in posix_bootstrap
     assert "speech_server.gpu_select" in posix_bootstrap
     posix_launcher = (root / "start_server.sh").read_text(encoding="utf-8")
     assert "--gpu" in posix_launcher
